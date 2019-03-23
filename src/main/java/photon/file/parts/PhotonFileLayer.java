@@ -149,19 +149,24 @@ public class PhotonFileLayer {
         }
     }
 
-    private void calculate(ArrayList<BitSet> unpackedImage, ArrayList<BitSet> previousUnpackedImage, PhotonLayer photonLayer) {
+    private void calculate(ArrayList<BitSet> unpackedImage, ArrayList<BitSet> previousUnpackedImage, PhotonLayer photonLayer, PhotonFileLayer previousLayer) {
         islandRows = new ArrayList<>();
         isLandsCount = 0;
 
         photonLayer.clear();
 
+        PhotonLayer layerData = null;
+        
+        if (previousLayer != null) layerData = previousLayer.getLayer();
+        
         for (int y = 0; y < unpackedImage.size(); y++) {
             BitSet currentRow = unpackedImage.get(y);
             BitSet prevRow = previousUnpackedImage != null ? previousUnpackedImage.get(y) : null;
             if (currentRow != null) {
                 for (int x = 0; x < currentRow.length(); x++) {
                     if (currentRow.get(x)) {
-                        if (prevRow == null || prevRow.get(x)) {
+                    	
+                        if (prevRow == null || (prevRow.get(x) && (layerData.get(x, y) == PhotonLayer.SUPPORTED || layerData.get(x, y) == PhotonLayer.CONNECTED))) {
                             photonLayer.supported(x, y);
                         } else {
                             photonLayer.island(x, y);
@@ -206,6 +211,7 @@ public class PhotonFileLayer {
     public static void calculateLayers(PhotonFileHeader photonFileHeader, List<PhotonFileLayer> layers, int margin, IPhotonProgress iPhotonProgress) throws Exception {
         PhotonLayer photonLayer = new PhotonLayer(photonFileHeader.getResolutionX(), photonFileHeader.getResolutionY());
         ArrayList<BitSet> previousUnpackedImage = null;
+        PhotonFileLayer previousLayer = null;
         int i = 0;
         for (PhotonFileLayer layer : layers) {
             ArrayList<BitSet> unpackedImage = layer.unpackImage(photonFileHeader.getResolutionX());
@@ -218,12 +224,13 @@ public class PhotonFileLayer {
 
             layer.unknownPixels(unpackedImage, photonLayer);
 
-            layer.calculate(unpackedImage, previousUnpackedImage, photonLayer);
+            layer.calculate(unpackedImage, previousUnpackedImage, photonLayer, previousLayer);
 
             if (previousUnpackedImage != null) {
                 previousUnpackedImage.clear();
             }
             previousUnpackedImage = unpackedImage;
+            previousLayer = layer;
 
             layer.packedLayerImage = photonLayer.packLayerImage();
             layer.isCalculated = true;
@@ -237,6 +244,7 @@ public class PhotonFileLayer {
     public static void calculateLayers(PhotonFileHeader photonFileHeader, List<PhotonFileLayer> layers, int margin, int layerNo) throws Exception {
         PhotonLayer photonLayer = new PhotonLayer(photonFileHeader.getResolutionX(), photonFileHeader.getResolutionY());
         ArrayList<BitSet> previousUnpackedImage = null;
+        PhotonFileLayer previousLayer = null;
 
         if (layerNo>0) {
             previousUnpackedImage = layers.get(layerNo-1).unpackImage(photonFileHeader.getResolutionX());
@@ -252,12 +260,13 @@ public class PhotonFileLayer {
 
             layer.unknownPixels(unpackedImage, photonLayer);
 
-            layer.calculate(unpackedImage, previousUnpackedImage, photonLayer);
+            layer.calculate(unpackedImage, previousUnpackedImage, photonLayer, previousLayer);
 
             if (previousUnpackedImage != null) {
                 previousUnpackedImage.clear();
             }
             previousUnpackedImage = unpackedImage;
+            previousLayer = layer;
 
             layer.packedLayerImage = photonLayer.packLayerImage();
             layer.isCalculated = true;
