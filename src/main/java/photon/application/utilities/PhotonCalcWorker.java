@@ -24,13 +24,13 @@
 
 package photon.application.utilities;
 
-import photon.application.MainForm;
-import photon.file.PhotonFile;
-import photon.file.parts.IPhotonProgress;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
 import java.io.File;
+
+import javax.swing.SwingWorker;
+
+import photon.application.MainForm;
+import photon.file.parts.IPhotonProgress;
 
 /**
  * by bn on 16/07/2018.

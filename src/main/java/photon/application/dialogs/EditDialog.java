@@ -24,21 +24,35 @@
 
 package photon.application.dialogs;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.HashSet;
+
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
+
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+
 import photon.application.MainForm;
 import photon.file.PhotonFile;
 import photon.file.parts.PhotonDot;
 import photon.file.parts.PhotonFileLayer;
 import photon.file.parts.PhotonLayer;
 import photon.file.ui.PhotonEditPanel;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.security.PublicKey;
-import java.util.HashSet;
 
 public class EditDialog extends JDialog {
     private JPanel contentPane;

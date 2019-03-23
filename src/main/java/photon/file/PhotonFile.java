@@ -24,12 +24,23 @@
 
 package photon.file;
 
-import photon.application.utilities.PhotonCalcWorker;
-import photon.file.parts.*;
-
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import photon.file.parts.DummyPhotonLoadProgress;
+import photon.file.parts.IPhotonProgress;
+import photon.file.parts.PhotonFileHeader;
+import photon.file.parts.PhotonFileLayer;
+import photon.file.parts.PhotonFilePreview;
+import photon.file.parts.PhotonLayer;
+import photon.file.parts.PhotonOutputStream;
 
 /**
  * by bn on 30/06/2018.

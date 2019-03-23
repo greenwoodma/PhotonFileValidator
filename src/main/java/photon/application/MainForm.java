@@ -24,29 +24,54 @@
 
 package photon.application;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JSpinner;
+import javax.swing.JTabbedPane;
+import javax.swing.WindowConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+
+import photon.application.base.BaseForm;
 import photon.application.base.BaseFrame;
+import photon.application.dialogs.EditDialog;
+import photon.application.dialogs.FixDialog;
+import photon.application.dialogs.InformationDialog;
+import photon.application.dialogs.PreviewDialog;
+import photon.application.dialogs.SaveDialog;
 import photon.application.render.OnionMousePanel;
 import photon.application.render.OnionPanel;
-import photon.application.base.BaseForm;
-import photon.application.dialogs.*;
 import photon.application.utilities.MainUtils;
 import photon.application.utilities.PhotonLoadWorker;
 import photon.file.ui.PhotonLayerImage;
 import photon.file.ui.PhotonPreviewImage;
 import photon.file.ui.ScrollPosition;
 import photon.file.ui.ScrollUtil;
-
-import javax.sound.midi.Soundbank;
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
 
 /**
  * by bn on 29/06/2018.
