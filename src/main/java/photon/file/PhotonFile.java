@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 
 import photon.file.parts.DummyPhotonLoadProgress;
@@ -342,8 +343,33 @@ public class PhotonFile {
 
             progres.showInfo("<br>");
 
+            
+         
         }
+        
         findIslands();
+        
+        for (int i = 0 ; i < getLayerCount() ; ++i) {
+        	        	
+        	PhotonFileLayer current  = getLayer(i);
+        	
+        	PhotonLayer layerData = current.getLayer();
+            
+            for (int w = 0 ; w < getHeight() ; w++) {
+            	for (int h = 0 ; h < getWidth() ; h++) {
+            		if (layerData.get(w, h) == PhotonLayer.ISLAND) {
+            			
+            			layerData.remove(w, h, PhotonLayer.ISLAND);
+            		}
+            	}
+            }
+            
+            current.saveLayer(layerData);
+            
+            
+        }
+        
+        calculate(progres);
     }
 
     private int fixit(IPhotonProgress progres, PhotonLayer layer, PhotonFileLayer fileLayer, int loops) throws Exception {
