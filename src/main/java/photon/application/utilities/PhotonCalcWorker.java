@@ -38,10 +38,12 @@ import photon.file.parts.IPhotonProgress;
 public class PhotonCalcWorker extends SwingWorker<Integer, String> implements IPhotonProgress {
     private MainForm mainForm;
     private File file;
+    private int visibleLayer;
 
     public PhotonCalcWorker(MainForm mainForm) {
         this.mainForm = mainForm;
         mainForm.marginInfo.setText("");
+        visibleLayer = mainForm.layerSlider.getValue();
     }
 
     @Override
@@ -56,6 +58,7 @@ public class PhotonCalcWorker extends SwingWorker<Integer, String> implements IP
         mainForm.openBtn.setEnabled(true);
         if (mainForm.photonFile!=null) {
             mainForm.showFileInformation();
+            mainForm.layerSlider.setValue(visibleLayer);
         }
     }
 

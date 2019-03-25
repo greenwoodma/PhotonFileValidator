@@ -187,6 +187,8 @@ public class EditDialog extends JDialog {
             mainForm.showMarginAndIslandInformation();
         }
         dispose();
+        
+        mainForm.calc();
     }
 
     private void onCancel() {
