@@ -248,6 +248,7 @@ public class PhotonFileLayer {
 
         if (layerNo>0) {
             previousUnpackedImage = layers.get(layerNo-1).unpackImage(photonFileHeader.getResolutionX());
+            previousLayer = layers.get(layerNo-1);
         }
 
         for (int i=0; i<2; i++) {
