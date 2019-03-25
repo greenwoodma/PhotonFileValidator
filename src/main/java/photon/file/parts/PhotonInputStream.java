@@ -24,15 +24,16 @@
 
 package photon.file.parts;
 
-/**
- *  by bn on 01/07/2018.
- */
-
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Photon files are little-endian but Java uses big-endian to read multi-byte
+ * data types, so this class implements DataInput to access the underlying data
+ * as little-endian.
+ */
 public class PhotonInputStream extends InputStream implements DataInput {
     private DataInputStream dataInputStream;
     private InputStream inputStream;

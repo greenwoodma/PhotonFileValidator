@@ -68,6 +68,16 @@ public class PhotonFilePreview {
     }
 
     private void decodeImageData() {
+    	
+    	/**
+    	 * Decodes a RLE byte array from a *.photon file
+         * Encoding scheme:
+         *   The color (R,G,B) of a pixel spans 2 bytes (little endian) and
+         *   each color component is 5 bits: RRRRR GGG GG X BBBBB
+         *   If the X bit is set, then the next 2 bytes (little endian) masked
+         *   with 0xFFF represents how many more times to repeat that pixel.
+    	 */
+    	
         imageData = new int[resolutionX * resolutionY];
         int d = 0;
         for (int i = 0; i < dataSize; i++) {
@@ -90,7 +100,6 @@ public class PhotonFilePreview {
                 repeat--;
             }
         }
-
     }
 
     public int getResolutionX() {
