@@ -62,6 +62,14 @@ public class PhotonLayer {
         rowSupported = new int[height];
 
     }
+    
+    public int getWidth() {
+    	return width;
+    }
+    
+    public int getHeight() {
+    	return height;
+    }
 
     public void clear() {
         for (int y = 0; y < height; y++) {
