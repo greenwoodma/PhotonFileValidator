@@ -343,23 +343,21 @@ public class PhotonFile {
 
             progres.showInfo("<br>");
         }
-        
+
         findIslands();
-        
+
         calculate(progres);
     }
-    
+
     public void removeIslands() throws Exception {
     	for (int i = 0 ; i < getLayerCount() ; ++i) {
-        	
+
         	PhotonFileLayer current  = getLayer(i);
-        	
+
         	if (current.getIsLandsCount() == 0) continue;
-        	
-        	System.out.println(i);
-        	
+
         	PhotonLayer layerData = current.getLayer();
-        	
+
 			// can we use the row islands to speed this up?
 			for (int h = 0; h < getHeight(); h++) {
 				if (layerData.rowIslands[h] > 0) {
@@ -371,12 +369,10 @@ public class PhotonFile {
 					}
 				}
 			}
-            
+
             current.saveLayer(layerData);
-            
-            
         }
-    	
+
     	findIslands();
     }
 
