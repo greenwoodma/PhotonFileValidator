@@ -65,7 +65,7 @@ public class PhotonEditPanel extends JPanel {
                 int x1 = 15 + x * 10;
                 int y1 = 15 + y * 10;
 
-                switch (layer.get(layerY + y, layerX + x)) {
+                switch (layer.get(layerX + x, layerY + y)) {
                     case PhotonLayer.SUPPORTED:
                         g.setColor(Color.decode("#008800"));
                         break;

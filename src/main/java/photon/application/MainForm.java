@@ -36,13 +36,18 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -79,7 +84,7 @@ import photon.file.ui.ScrollUtil;
 public class MainForm extends BaseForm implements ActionListener, ItemListener {
     private JPanel mainPanel;
     public JButton openBtn;
-    public JPanel layerImage;
+    public JLabel layerImage;
     public JScrollPane imageScrollPane;
     public JSpinner layerSpinner;
     public JLabel layerInfo;
@@ -246,7 +251,6 @@ public class MainForm extends BaseForm implements ActionListener, ItemListener {
                 changeLayer();
             }
         });
-
     }
 
     @Override
@@ -305,7 +309,7 @@ public class MainForm extends BaseForm implements ActionListener, ItemListener {
 
 
     private void createUIComponents() {
-        layerImage = new PhotonLayerImage(2560, 1440);
+        layerImage = new PhotonLayerImage(2560,1440);
         render3D = new OnionPanel();
         layer3D = new OnionMousePanel((OnionPanel) render3D);
         previewSmallPanel = new PhotonPreviewImage(2000, 2000);
@@ -464,6 +468,7 @@ public class MainForm extends BaseForm implements ActionListener, ItemListener {
         previewSmallScrollPane = new JScrollPane();
         tabPreviewSmall.add(previewSmallScrollPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         previewSmallScrollPane.setViewportView(previewSmallPanel);
+        
     }
 
     /**

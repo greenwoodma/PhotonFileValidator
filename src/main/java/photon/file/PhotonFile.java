@@ -246,11 +246,11 @@ public class PhotonFile {
     }
 
     public int getWidth() {
-        return photonFileHeader.getResolutionY();
+        return photonFileHeader.getResolutionX();
     }
 
     public int getHeight() {
-        return photonFileHeader.getResolutionX();
+        return photonFileHeader.getResolutionY();
     }
 
     public int getLayerCount() {
@@ -342,34 +342,42 @@ public class PhotonFile {
             }
 
             progres.showInfo("<br>");
-
-            
-         
         }
         
         findIslands();
         
-        for (int i = 0 ; i < getLayerCount() ; ++i) {
-        	        	
+        calculate(progres);
+    }
+    
+    public void removeIslands() throws Exception {
+    	for (int i = 0 ; i < getLayerCount() ; ++i) {
+        	
         	PhotonFileLayer current  = getLayer(i);
         	
+        	if (current.getIsLandsCount() == 0) continue;
+        	
+        	System.out.println(i);
+        	
         	PhotonLayer layerData = current.getLayer();
-            
-            for (int w = 0 ; w < getHeight() ; w++) {
-            	for (int h = 0 ; h < getWidth() ; h++) {
-            		if (layerData.get(w, h) == PhotonLayer.ISLAND) {
-            			
-            			layerData.remove(w, h, PhotonLayer.ISLAND);
-            		}
-            	}
-            }
+        	
+			// can we use the row islands to speed this up?
+			for (int h = 0; h < getHeight(); h++) {
+				if (layerData.rowIslands[h] > 0) {
+					for (int w = 0; w < getWidth(); w++) {
+						if (layerData.get(w, h) == PhotonLayer.ISLAND) {
+
+							layerData.remove(w, h, PhotonLayer.ISLAND);
+						}
+					}
+				}
+			}
             
             current.saveLayer(layerData);
             
             
         }
-        
-        calculate(progres);
+    	
+    	findIslands();
     }
 
     private int fixit(IPhotonProgress progres, PhotonLayer layer, PhotonFileLayer fileLayer, int loops) throws Exception {

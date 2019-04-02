@@ -24,20 +24,24 @@
 
 package photon.file.ui;
 
-import photon.file.parts.PhotonFileLayer;
-import photon.file.parts.PhotonLine;
-import photon.file.parts.PhotonRow;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.BitSet;
 
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JViewport;
+
+import photon.file.parts.PhotonFileLayer;
+import photon.file.parts.PhotonLine;
+import photon.file.parts.PhotonRow;
+
 /**
  * by bn on 02/07/2018.
  */
-public class PhotonLayerImage extends JPanel {
+public class PhotonLayerImage extends JLabel {
     private int width;
     private int height;
     private float scale = 1f;
@@ -47,14 +51,19 @@ public class PhotonLayerImage extends JPanel {
         this.width = width;
         this.height = height;
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        setPreferredSize(new Dimension(width, height));
+        //setPreferredSize(new Dimension(width, height));
+        
     }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        g.drawImage(image, 0, 0, null);
+    
+    public BufferedImage getImage() {
+    	return image;
     }
-
+    
+    public float getScale() {
+    	return scale;
+    }
+    
+   
     public void reScale(int width, int height) {
         reScale(scale, width, height);
     }
@@ -63,9 +72,17 @@ public class PhotonLayerImage extends JPanel {
         this.scale = scale;
         this.width = width;
         this.height = height;
-
-        image = new BufferedImage((int) (width * scale), (int) (height * scale), BufferedImage.TYPE_INT_RGB);
-        setPreferredSize(new Dimension((int) (width * scale), (int) (height * scale)));
+        
+        JViewport parent  = (JViewport)getParent();
+        
+        
+        this.scale = scale * height < parent.getHeight() ? (float)parent.getHeight()/height : scale;
+        
+        
+        
+        image = new BufferedImage((int) (width * this.scale), (int) (height * this.scale), BufferedImage.TYPE_INT_RGB);
+        //setPreferredSize(new Dimension((int) (width * scale), (int) (height * scale)));
+        
     }
 
     public void drawLayer(PhotonFileLayer layer, int margin) {
@@ -105,7 +122,7 @@ public class PhotonLayerImage extends JPanel {
                             int end = i + line.length;
                             if (line.color != Color.black) {
                                 g.setColor(line.color);
-                                g.drawLine(columnNumber, i, columnNumber, end);
+                                g.drawLine(i, columnNumber, end, columnNumber);
                             }
                             i = end;
                         }
@@ -121,46 +138,17 @@ public class PhotonLayerImage extends JPanel {
                     columnNumber++;
                 }
             }
-
-/*
-            if (rootLayer) {
-                g.setColor(Color.decode("#008800"));
-                int columnNumber = 0;
-                for (BitSet column : layer.getSupportedRows()) {
-                    drawDot(g, columnNumber, column);
-                    columnNumber++;
-                }
-            } else {
-                int columnNumber = 0;
-                g.setColor(Color.decode("#008800"));
-                for (BitSet column : layer.getSupportedRows()) {
-                    drawDot(g, columnNumber, column);
-                    columnNumber++;
-                }
-
-                columnNumber = 0;
-                g.setColor(Color.decode("#FFFF00"));
-                for (BitSet column : layer.getUnSupportedRows()) {
-                    drawDot(g, columnNumber, column);
-                    columnNumber++;
-                }
-
-                columnNumber = 0;
-                g.setColor(Color.decode("#FF0000"));
-                for (BitSet column : layer.getIslandRows()) {
-                    drawDot(g, columnNumber, column);
-                    columnNumber++;
-                }
-            }
-*/
+            
             g.dispose();
         }
+        
+        setIcon(new ImageIcon(image));
     }
 
     private void drawDot(Graphics2D g, int columnNumber, BitSet column) {
         if (!column.isEmpty()) {
             for (int i = column.nextSetBit(0); i >= 0; i = column.nextSetBit(i + 1)) {
-                g.drawLine(columnNumber, i, columnNumber, i);
+                g.drawLine(i, columnNumber, i, columnNumber);
             }
         }
     }
@@ -168,8 +156,8 @@ public class PhotonLayerImage extends JPanel {
     private void drawCross(Graphics2D g, int columnNumber, BitSet column) {
         if (!column.isEmpty()) {
             for (int i = column.nextSetBit(0); i >= 0; i = column.nextSetBit(i + 1)) {
-                g.drawLine(columnNumber, 0, columnNumber, height - 1);
-                g.drawLine(0, i, width - 1, i);
+                g.drawLine(0, columnNumber, width - 1, columnNumber);
+                g.drawLine(i, 0, i, height - 1);
             }
         }
     }

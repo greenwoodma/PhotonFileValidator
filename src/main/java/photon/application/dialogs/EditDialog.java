@@ -38,6 +38,7 @@ import java.util.HashSet;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -58,6 +59,7 @@ public class EditDialog extends JDialog {
     private JButton buttonCancel;
     private JLabel infoText;
     private JPanel editArea;
+    private JComboBox editMode;
 
     private EditDialog me;
     private MainForm mainForm;
@@ -90,6 +92,9 @@ public class EditDialog extends JDialog {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
         
+        editMode = new JComboBox(new String[]{"Pixels On","Pixels Off", "Flip Pixels"});
+        
+        buttonPanel.add(editMode);
         buttonPanel.add(Box.createHorizontalGlue());
         buttonPanel.add(buttonOK);
         buttonPanel.add(Box.createHorizontalStrut(5));
@@ -151,14 +156,44 @@ public class EditDialog extends JDialog {
     }
 
     private void handleClick(int x, int y) {
-        Color color = isSet(x, y);
+        Color color = isSet(x, y, editMode.getSelectedIndex());
         ((PhotonEditPanel) editArea).drawDot(x, y, layer, color);
         editArea.repaint();
     }
 
-    private Color isSet(int x, int y) {
+    private Color isSet(int x, int y, int mode) {
         byte original = layer.get(layerX + x, layerY + y);
-        boolean result = original != PhotonLayer.OFF;
+        
+        PhotonDot dot = new PhotonDot(layerX + x, layerY + y);
+        dots.remove(dot);
+        
+        switch (mode) {
+        	case 0:
+        		//pixel should be on
+        		if (original != PhotonLayer.OFF) return origColor(layerX + x, layerY + y);
+        		
+        		dots.add(dot);
+        		
+        		return Color.CYAN;
+        	case 1:
+        		//pixel should be off
+        		if (original == PhotonLayer.OFF) return Color.BLACK;
+        		
+        		dots.add(dot);
+        		
+        		return Color.DARK_GRAY;
+        	case 2:
+        		//pixel should flip
+        		
+        		dots.add(dot);
+        		
+        		return original != PhotonLayer.OFF ? Color.DARK_GRAY : Color.CYAN;
+        }
+        
+        // should be impossible to ever get to this point;
+        return Color.BLUE;
+        
+        /*boolean result = original != PhotonLayer.OFF;
 
         PhotonDot dot = new PhotonDot(layerX + x, layerY + y);
         if (dots.contains(dot)) {
@@ -182,7 +217,24 @@ public class EditDialog extends JDialog {
         } else {
             dots.add(dot);
             return result ? Color.darkGray : Color.cyan;
-        }
+        }*/
+    }
+    
+    private Color origColor(int x, int y) {
+    	switch (layer.get(x, y)) {
+        case PhotonLayer.SUPPORTED:
+            return Color.decode("#008800");
+
+        case PhotonLayer.CONNECTED:
+            return Color.decode("#FFFF00");
+
+        case PhotonLayer.ISLAND:
+            return Color.decode("#FF0000");
+
+        default:
+            return Color.black;
+
+    }
     }
 
     private void onOK() {
@@ -236,11 +288,6 @@ public class EditDialog extends JDialog {
         infoText.setText("Showing column " + indexX + " to " + (indexX + 74) + ", in row " + indexY + " to " + (indexY + 44) + ")");
         ((PhotonEditPanel) editArea).drawLayer(layerX, layerY, layer);
         editArea.repaint();
-    }
-
-
-    private void createUIComponents() {
-         
     }
 
     public static PhotonDot getPosition(MouseEvent e) {

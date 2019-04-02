@@ -369,12 +369,14 @@ public class BaseForm {
             me.editDialog = new EditDialog(me);
         }
 
-        float zoomFactor = 1f;
+        /*float zoomFactor = 1f;
         if (zoom > 0) {
             zoomFactor = 1f + (zoom / 2f);
         } else if (zoom < 0){
             zoomFactor = 1f + (zoom / 4f);
-        }
+        }*/
+        
+        float zoomFactor = ((PhotonLayerImage)me.layerImage).getScale();
 
         me.editDialog.setInformation(photonFile, getLayer(), (int) (x / zoomFactor), (int) (y / zoomFactor));
         me.editDialog.setSize(new Dimension(800, 600));

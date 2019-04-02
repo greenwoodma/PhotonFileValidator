@@ -47,7 +47,7 @@ public class PhotonLayer {
 
     private byte[][] iArray;
     private int[] pixels;
-    private int[] rowIslands;
+    public int[] rowIslands;
     private int[] rowUnsupported;
     private int[] rowSupported;
 
