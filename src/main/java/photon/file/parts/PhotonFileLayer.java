@@ -125,11 +125,17 @@ public class PhotonFileLayer {
             }
             x = lineEnd + 1;
             if (x > resolutionX) {
+                if (unpackedImage.size() == photonFileHeader.getResolutionY()) {
+				    // if we would add an extra row beyond the height of the
+				    // layer data then stop to keep the data consistent
+                    break;
+                }
                 currentRow = new BitSet();
                 unpackedImage.add(currentRow);
                 x = 0;
             }
         }
+
         return unpackedImage;
     }
 
@@ -158,7 +164,7 @@ public class PhotonFileLayer {
         PhotonLayer layerData = null;
         
         if (previousLayer != null) layerData = previousLayer.getLayer();
-        
+
         for (int y = 0; y < unpackedImage.size(); y++) {
             BitSet currentRow = unpackedImage.get(y);
             BitSet prevRow = previousUnpackedImage != null ? previousUnpackedImage.get(y) : null;
