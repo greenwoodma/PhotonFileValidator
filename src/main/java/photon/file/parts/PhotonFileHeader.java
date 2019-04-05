@@ -218,4 +218,8 @@ public class PhotonFileHeader {
     public void setBottomLayers(int bottomLayers) {
         this.bottomLayers = bottomLayers;
     }
+    
+    public void setNumberLayers(int numLayers) {
+    	numberOfLayers = numLayers;
+    }
 }

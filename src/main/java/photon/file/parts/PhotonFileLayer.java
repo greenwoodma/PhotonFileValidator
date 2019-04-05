@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * by bn on 01/07/2018.
  */
-public class PhotonFileLayer {
+public class PhotonFileLayer implements Cloneable {
     private float layerPositionZ;
     private float layerExposure;
     private float layerOffTimeSeconds;
@@ -86,6 +86,24 @@ public class PhotonFileLayer {
         os.writeInt(unknown4);
 
         return dataPosition + dataSize + 1;
+    }
+    
+    public PhotonFileLayer(PhotonFileLayer orig) throws Exception {
+    	layerPositionZ = orig.layerPositionZ;
+        layerExposure = orig.layerExposure;
+        layerOffTimeSeconds = orig.layerOffTimeSeconds;
+
+        dataAddress = orig.dataAddress;
+        dataSize = orig.dataSize;
+
+        unknown1 = orig.unknown1;
+        unknown2 = orig.unknown2;
+        unknown3 = orig.unknown3;
+        unknown4 = orig.unknown4;
+        
+        photonFileHeader = orig.photonFileHeader;
+        
+        saveLayer(orig.getLayer());
     }
 
     public void saveData(PhotonOutputStream os) throws Exception {

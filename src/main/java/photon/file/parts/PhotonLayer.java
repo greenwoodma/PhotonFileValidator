@@ -24,13 +24,18 @@
 
 package photon.file.parts;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Hashtable;
+
+import javax.imageio.ImageIO;
 
 /**
  * by bn on 02/07/2018.
@@ -428,5 +433,65 @@ public class PhotonLayer {
     public byte get(int x, int y) {
         return iArray[y][x];
     }
+    
+    public void exportAsPNG(File file) throws Exception {
+    	BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+    	
+    	Graphics2D graphics = (Graphics2D)image.getGraphics();
+    	
+    	graphics.clearRect(0, 0, width, height);
+    	
+    	graphics.setColor(Color.WHITE);
+        
+    	for (int w = 0 ; w < width ; ++w) {
+    		for (int h = 0 ; h < height ; ++h) {
+    			if (get(w,h) != PhotonLayer.OFF) {
+    				graphics.drawLine(w, h, w, h);
+    			}
+    		}
+    	}
+    	
+    	graphics.dispose();
+    	
+    	ImageIO.write(image, "PNG", file);
+    }
 
+    public void importFromPNG(File file) throws Exception {
+    	System.out.println(file);
+    	BufferedImage buffer = ImageIO.read(file);
+    	
+    	BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+    	
+    	Graphics2D graphics = (Graphics2D)image.getGraphics();
+    	
+    	graphics.clearRect(0, 0, width, height);
+    	graphics.drawImage(buffer,null,0,0);
+    	graphics.dispose();
+    	
+    	clear();
+    	
+    	System.out.println(image.getWidth()+"/"+image.getHeight());
+    	
+    	System.out.println(image.getType());
+    	
+    	int[] pixels = image.getRaster().getPixels(0, 0, width, height, (int[])null);
+    	
+    	System.out.println(pixels.length);
+    	
+    	for (int pixel = 0, row = 0, col = 0 ; pixel < pixels.length ; pixel = pixel + 3) {
+    		if (pixels[pixel] != 0 || pixels[pixel+1] != 0 || pixels[pixel+2] != 0) {
+    			//System.out.println(col+","+row);
+    			supported(col, row);
+    		}
+    		
+            col++;
+            if (col == width) {
+               col = 0;
+               row++;
+            }
+    	}
+    	
+    	reduce();
+    	
+    }
 }

@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 
 import photon.file.parts.DummyPhotonLoadProgress;
@@ -69,6 +68,10 @@ public class PhotonFile {
 
     public PhotonFile readFile(byte[] file) throws Exception {
         return readFile(file, new DummyPhotonLoadProgress());
+    }
+    
+    public List<PhotonFileLayer> getLayers() {
+    	return layers;
     }
 
     public PhotonFile readFile(byte[] file, IPhotonProgress iPhotonProgress) throws Exception {
