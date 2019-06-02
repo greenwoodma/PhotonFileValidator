@@ -24,6 +24,7 @@
 
 package photon.file.parts;
 
+import java.awt.Rectangle;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,6 +56,8 @@ public class PhotonFileLayer implements Cloneable {
     private boolean extendsMargin;
     private PhotonFileHeader photonFileHeader;
     public boolean isCalculated;
+
+    private Rectangle boundingBox;
 
     private PhotonFileLayer(PhotonInputStream ds) throws Exception {
         layerPositionZ = ds.readFloat();
@@ -242,8 +245,13 @@ public class PhotonFileLayer implements Cloneable {
 
             iPhotonProgress.showInfo("Calculating photon file layer " + i + "/" + photonFileHeader.getNumberOfLayers());
 
+            layer.boundingBox = calculateBoundingBox(unpackedImage);
+
             if (margin > 0) {
-                layer.extendsMargin = layer.checkMagin(unpackedImage, margin);
+                Rectangle printArea = new Rectangle(margin, margin, photonFileHeader.getResolutionX() - (margin * 2),
+                        photonFileHeader.getResolutionY() - (margin * 2));
+
+                layer.extendsMargin = !printArea.contains(layer.boundingBox);
             }
 
             layer.unknownPixels(unpackedImage, photonLayer);
@@ -279,8 +287,13 @@ public class PhotonFileLayer implements Cloneable {
             PhotonFileLayer layer = layers.get(layerNo + i);
             ArrayList<BitSet> unpackedImage = layer.unpackImage(photonFileHeader.getResolutionX());
 
+            layer.boundingBox = calculateBoundingBox(unpackedImage);
+
             if (margin > 0) {
-                layer.extendsMargin = layer.checkMagin(unpackedImage, margin);
+                Rectangle printArea = new Rectangle(margin, margin, photonFileHeader.getResolutionX() - (margin * 2),
+                        photonFileHeader.getResolutionY() - (margin * 2));
+
+                layer.extendsMargin = !printArea.contains(layer.boundingBox);
             }
 
             layer.unknownPixels(unpackedImage, photonLayer);
@@ -355,35 +368,35 @@ public class PhotonFileLayer implements Cloneable {
         return extendsMargin;
     }
 
-    private boolean checkMagin(ArrayList<BitSet> unpackedImage, int margin) {
-        if (unpackedImage.size() > margin) {
-            // check top margin rows
-            for (int i = 0; i < margin; i++) {
-                if (!unpackedImage.get(i).isEmpty()) {
-                    return true;
-                }
-            }
-            // check bottom margin rows
-            for (int i = unpackedImage.size() - margin; i < unpackedImage.size(); i++) {
-                if (!unpackedImage.get(i).isEmpty()) {
-                    return true;
-                }
-            }
+    public Rectangle getBoundingBox() {
+        return boundingBox;
+    }
 
-            for (int i = margin; i < unpackedImage.size() - margin; i++) {
-                BitSet row = unpackedImage.get(i);
-                int nextBit = row.nextSetBit(0);
-                if (nextBit >= 0 && nextBit < margin) {
-                    return true;
-                }
-                nextBit = row.nextSetBit(photonFileHeader.getResolutionX() - margin);
-                if (nextBit > photonFileHeader.getResolutionX() - margin) {
-                    return true;
+    private static Rectangle calculateBoundingBox(ArrayList<BitSet> unpackedImage) {
+        int minX = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+
+        int minY = Integer.MAX_VALUE;
+        int maxY = Integer.MIN_VALUE;
+
+        for (int i = 0; i < unpackedImage.size(); ++i) {
+            BitSet row = unpackedImage.get(i);
+
+            if (!row.isEmpty()) {
+                minY = Math.min(minY, i);
+                maxY = Math.max(maxY, i);
+
+                int column = row.nextSetBit(0);
+                while (column != -1) {
+                    minX = Math.min(minX, column);
+                    maxX = Math.max(maxX, column);
+
+                    column = row.nextSetBit(column + 1);
                 }
             }
-
         }
-        return false;
+
+        return new Rectangle(minX, minY, maxX - minX, maxY - minY);
     }
 
     public PhotonLayer getLayer() {

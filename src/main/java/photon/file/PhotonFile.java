@@ -24,6 +24,7 @@
 
 package photon.file;
 
+import java.awt.geom.Rectangle2D;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -57,6 +58,8 @@ public class PhotonFile {
 
     private int margin;
     private ArrayList<Integer> marginLayers;
+
+    private Rectangle2D boundingBox;
 
     public PhotonFile readFile(File file) throws Exception {
         return readFile(getBinaryData(file));
@@ -409,13 +412,16 @@ public class PhotonFile {
 
         if (margin > 0) {
             marginLayers = new ArrayList<>();
-            int i = 0;
-            for (PhotonFileLayer layer : layers) {
-                if (layer.doExtendMargin()) {
+            for (int i = 0; i < layers.size(); ++i) {
+                if (layers.get(i).doExtendMargin()) {
                     marginLayers.add(i);
                 }
-                i++;
             }
+        }
+
+        for (PhotonFileLayer layer : layers) {
+            boundingBox = boundingBox == null ? layer.getBoundingBox()
+                    : boundingBox.createUnion(layer.getBoundingBox());
         }
     }
 
