@@ -51,10 +51,8 @@ public class PhotonLayerImage extends JLabel {
         this.width = width;
         this.height = height;
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        //setPreferredSize(new Dimension(width, height));
-        
     }
-    
+
     public BufferedImage getImage() {
     	return image;
     }
@@ -72,17 +70,11 @@ public class PhotonLayerImage extends JLabel {
         this.scale = scale;
         this.width = width;
         this.height = height;
-        
-        JViewport parent  = (JViewport)getParent();
-        
-        
-        this.scale = scale * height < parent.getHeight() ? (float)parent.getHeight()/height : scale;
-        
-        
-        
+
+        JViewport parent = (JViewport) getParent();
+
+        this.scale = scale * height < parent.getHeight() ? (float) parent.getHeight() / height : scale;
         image = new BufferedImage((int) (width * this.scale), (int) (height * this.scale), BufferedImage.TYPE_INT_RGB);
-        //setPreferredSize(new Dimension((int) (width * scale), (int) (height * scale)));
-        
     }
 
     public void drawLayer(PhotonFileLayer layer, int margin) {
