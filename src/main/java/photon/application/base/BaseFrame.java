@@ -57,324 +57,369 @@ public class BaseFrame extends JFrame implements AWTEventListener {
         super(title);
         this.getToolkit().addAWTEventListener(this, AWTEvent.KEY_EVENT_MASK);
         
-
         JMenuBar menuBar = new JMenuBar();
-        
+
         JMenu menu = new JMenu("Extras");
         menuBar.add(menu);
-        
+
         JMenuItem menuItem = new JMenuItem("Export Layer");
         menuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int layer = baseForm.layerSlider.getValue();
-				
-				try {
-					baseForm.photonFile.getLayer(layer).getLayer().exportAsPNG(new File("slice-"+layer+".png"));
-				} catch (Exception e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-			}
-		});
-        
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int layer = baseForm.layerSlider.getValue();
+
+                try {
+                    baseForm.photonFile.getLayer(layer).getLayer().exportAsPNG(new File("slice-" + layer + ".png"));
+                } catch (Exception e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+        });
+
         menu.add(menuItem);
-        
+
         menuItem = new JMenuItem("Import Layer");
         menuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-				baseForm.layerInfo.setForeground(Color.red);
-				baseForm.layerInfo.setText("Importing layer...");
-				
-				Thread thread = new Thread() {
 
-					@Override
-					public void run() {
-						PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
-			            
-						int layer = baseForm.layerSlider.getValue();
-						
-						try {
-							PhotonFileLayer fileLayer = baseForm.photonFile.getLayer(layer);
-							PhotonLayer layerData = fileLayer.getLayer();//new PhotonLayer(baseForm.photonFile.getWidth(), baseForm.photonFile.getHeight());
-							layerData.importFromPNG(new File("slice-"+layer+".png"));
-							fileLayer.saveLayer(layerData);
-							baseForm.photonFile.calculate(layer);
-							
-						} catch (Exception e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-						calcWorker.execute();					
-					}
-					
-				};
-				
-				thread.start();
-				
-			}
-		});
-        
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                baseForm.layerInfo.setForeground(Color.red);
+                baseForm.layerInfo.setText("Importing layer...");
+
+                Thread thread = new Thread() {
+
+                    @Override
+                    public void run() {
+                        PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
+
+                        int layer = baseForm.layerSlider.getValue();
+
+                        try {
+                            PhotonFileLayer fileLayer = baseForm.photonFile.getLayer(layer);
+                            PhotonLayer layerData = fileLayer.getLayer();// new
+                                                                         // PhotonLayer(baseForm.photonFile.getWidth(),
+                                                                         // baseForm.photonFile.getHeight());
+                            layerData.importFromPNG(new File("slice-" + layer + ".png"));
+                            fileLayer.saveLayer(layerData);
+                            baseForm.photonFile.calculate(layer);
+
+                        } catch (Exception e1) {
+                            // TODO Auto-generated catch block
+                            e1.printStackTrace();
+                        }
+                        calcWorker.execute();
+                    }
+
+                };
+
+                thread.start();
+
+            }
+        });
+
         menu.add(menuItem);
-        
+
         menuItem = new JMenuItem("Import Layers");
         menuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				baseForm.layerInfo.setForeground(Color.red);
-				baseForm.layerInfo.setText("Importing layer...");
-				
-				Thread thread = new Thread() {
 
-					@Override
-					public void run() {
-						PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
-			            
-						int layer = baseForm.layerSlider.getValue();
-						
-						try {
-							
-							File[] files = (new File("slices")).listFiles();
-							Arrays.sort(files);
-							
-							for (File file : files) {
-								
-							
-								PhotonFileLayer fileLayer = baseForm.photonFile.getLayer(layer);
-								PhotonLayer layerData = fileLayer.getLayer();//new PhotonLayer(baseForm.photonFile.getWidth(), baseForm.photonFile.getHeight());
-								layerData.importFromPNG(file);
-								fileLayer.saveLayer(layerData);
-								baseForm.photonFile.calculate(layer);
-								++layer;
-							}
-							
-						} catch (Exception e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-						calcWorker.execute();					
-					}
-					
-				};
-				
-				thread.start();
-				
-			}
-		});
-        
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                baseForm.layerInfo.setForeground(Color.red);
+                baseForm.layerInfo.setText("Importing layer...");
+
+                Thread thread = new Thread() {
+
+                    @Override
+                    public void run() {
+                        PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
+
+                        int layer = baseForm.layerSlider.getValue();
+
+                        try {
+
+                            File[] files = (new File("slices")).listFiles();
+                            Arrays.sort(files);
+
+                            for (File file : files) {
+
+                                PhotonFileLayer fileLayer = baseForm.photonFile.getLayer(layer);
+                                PhotonLayer layerData = fileLayer.getLayer();// new
+                                                                             // PhotonLayer(baseForm.photonFile.getWidth(),
+                                                                             // baseForm.photonFile.getHeight());
+                                layerData.importFromPNG(file);
+                                fileLayer.saveLayer(layerData);
+                                baseForm.photonFile.calculate(layer);
+                                ++layer;
+                            }
+
+                        } catch (Exception e1) {
+                            // TODO Auto-generated catch block
+                            e1.printStackTrace();
+                        }
+                        calcWorker.execute();
+                    }
+
+                };
+
+                thread.start();
+
+            }
+        });
+
         menu.add(menuItem);
-        
+
         menuItem = new JMenuItem("Remove Islands");
         menuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-				baseForm.layerInfo.setForeground(Color.red);
-				baseForm.layerInfo.setText("Removing islands...");
-				
-				Thread thread = new Thread() {
 
-					@Override
-					public void run() {
-						PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
-			            
-						
-						
-						try {
-							baseForm.photonFile.removeIslands();
-							//baseForm.showMarginAndIslandInformation();
-							
-						} catch (Exception e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-						calcWorker.execute();					
-					}
-					
-				};
-				
-				thread.start();
-				
-			}
-		});
-        
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                baseForm.layerInfo.setForeground(Color.red);
+                baseForm.layerInfo.setText("Removing islands...");
+
+                Thread thread = new Thread() {
+
+                    @Override
+                    public void run() {
+                        PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
+
+                        try {
+                            baseForm.photonFile.removeIslands();
+                            // baseForm.showMarginAndIslandInformation();
+
+                        } catch (Exception e1) {
+                            // TODO Auto-generated catch block
+                            e1.printStackTrace();
+                        }
+                        calcWorker.execute();
+                    }
+
+                };
+
+                thread.start();
+
+            }
+        });
+
         menu.add(menuItem);
-        
+
         menuItem = new JMenuItem("Set Z Position");
         menuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int layer = baseForm.layerSlider.getValue();
-				// TODO Auto-generated method stub
-				
-				PhotonFileLayer fileLayer = baseForm.photonFile.getLayer(layer);
 
-				
-				String zPos = JOptionPane.showInputDialog(BaseFrame.this,"Set Z position",fileLayer.getLayerPositionZ());
-				
-				if (zPos != null && zPos.length()>0) {
-					try {
-						float value = Float.parseFloat(zPos);
-						fileLayer.setLayerPositionZ(value);
-						baseForm.showLayerInformation(layer, fileLayer);
-					}
-					catch (Exception ex) {
-						ex.printStackTrace();
-					}
-				}
-			}
-		});
-        
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int layer = baseForm.layerSlider.getValue();
+                // TODO Auto-generated method stub
+
+                PhotonFileLayer fileLayer = baseForm.photonFile.getLayer(layer);
+
+                String zPos = JOptionPane.showInputDialog(BaseFrame.this, "Set Z position",
+                        fileLayer.getLayerPositionZ());
+
+                if (zPos != null && zPos.length() > 0) {
+                    try {
+                        float value = Float.parseFloat(zPos);
+                        fileLayer.setLayerPositionZ(value);
+                        baseForm.showLayerInformation(layer, fileLayer);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
+
         menu.add(menuItem);
-        
+
         menuItem = new JMenuItem("Set Exposure Time");
         menuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int layer = baseForm.layerSlider.getValue();
 
-				PhotonFileLayer fileLayer = baseForm.photonFile.getLayer(layer);
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int layer = baseForm.layerSlider.getValue();
 
-				String exposure = JOptionPane.showInputDialog(BaseFrame.this,"Set Exposure Time",fileLayer.getLayerExposure());
+                PhotonFileLayer fileLayer = baseForm.photonFile.getLayer(layer);
 
-				if (exposure != null && exposure.length()>0) {
-					try {
-						float value = Float.parseFloat(exposure);
-						fileLayer.setLayerExposure(value);
-						baseForm.showLayerInformation(layer, fileLayer);
-					}
-					catch (Exception ex) {
-						ex.printStackTrace();
-					}
-				}
-			}
-		});
-        
+                String exposure = JOptionPane.showInputDialog(BaseFrame.this, "Set Exposure Time",
+                        fileLayer.getLayerExposure());
+
+                if (exposure != null && exposure.length() > 0) {
+                    try {
+                        float value = Float.parseFloat(exposure);
+                        fileLayer.setLayerExposure(value);
+                        baseForm.showLayerInformation(layer, fileLayer);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
+
         menu.add(menuItem);
-        
+
         menuItem = new JMenuItem("Duplicate Layer");
         menuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-				
-				try {
-					int layer = baseForm.layerSlider.getValue();
-				
-				
-					PhotonFileLayer orig = baseForm.photonFile.getLayer(layer);
-				
-					PhotonFileLayer duplicate = new PhotonFileLayer(orig);
-					
-					List<PhotonFileLayer> layers = baseForm.photonFile.getLayers();
-					layers.add(layer, duplicate);
-					baseForm.photonFile.getPhotonFileHeader().setNumberLayers(layers.size());
-					
-				}
-				catch (Exception ex) {
-					ex.printStackTrace();
-				}
-				
-				PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
-				
-				calcWorker.execute();
-			}
-		});
-        
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                try {
+                    int layer = baseForm.layerSlider.getValue();
+
+                    PhotonFileLayer orig = baseForm.photonFile.getLayer(layer);
+
+                    PhotonFileLayer duplicate = new PhotonFileLayer(orig);
+
+                    List<PhotonFileLayer> layers = baseForm.photonFile.getLayers();
+                    layers.add(layer, duplicate);
+                    baseForm.photonFile.getPhotonFileHeader().setNumberLayers(layers.size());
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+                PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
+
+                calcWorker.execute();
+            }
+        });
+
         menu.add(menuItem);
-        
+
+        menuItem = new JMenuItem("Insert New Layer");
+        menuItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                try {
+                    int layer = baseForm.layerSlider.getValue();
+
+                    PhotonFileLayer orig = baseForm.photonFile.getLayer(layer);
+
+                    PhotonFileLayer duplicate = new PhotonFileLayer(orig);
+
+                    duplicate.saveLayer(
+                            new PhotonLayer(baseForm.photonFile.getWidth(), baseForm.photonFile.getHeight()));
+
+                    List<PhotonFileLayer> layers = baseForm.photonFile.getLayers();
+                    layers.add(layer, duplicate);
+                    baseForm.photonFile.getPhotonFileHeader().setNumberLayers(layers.size());
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+                PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
+
+                calcWorker.execute();
+            }
+        });
+
+        menu.add(menuItem);
+
         menuItem = new JMenuItem("Remove Earlier Layers");
         menuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int layer = baseForm.layerSlider.getValue();
-				
-				if (layer == 0) return;
-				
-				List<PhotonFileLayer> layers = baseForm.photonFile.getLayers();
-				
-				layers.subList(0, layer).clear();
-				
-				baseForm.photonFile.getPhotonFileHeader().setNumberLayers(layers.size());
-				
-				baseForm.layerSlider.setValue(0);
-				
-				PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
-				
-				calcWorker.execute();
-			}
-		});
-        
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int layer = baseForm.layerSlider.getValue();
+
+                if (layer == 0)
+                    return;
+
+                List<PhotonFileLayer> layers = baseForm.photonFile.getLayers();
+
+                layers.subList(0, layer).clear();
+
+                baseForm.photonFile.getPhotonFileHeader().setNumberLayers(layers.size());
+
+                baseForm.layerSlider.setValue(0);
+
+                PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
+
+                calcWorker.execute();
+            }
+        });
+
         menu.add(menuItem);
-        
-        
+
         menuItem = new JMenuItem("Delete Current Layer");
         menuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int layer = baseForm.layerSlider.getValue();
-				
-				List<PhotonFileLayer> layers = baseForm.photonFile.getLayers();
-				layers.remove(layer);				
-				baseForm.photonFile.getPhotonFileHeader().setNumberLayers(layers.size());
-				
-				PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
-				
-				calcWorker.execute();
-			}
-		});
-        
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int layer = baseForm.layerSlider.getValue();
+
+                List<PhotonFileLayer> layers = baseForm.photonFile.getLayers();
+                layers.remove(layer);
+                baseForm.photonFile.getPhotonFileHeader().setNumberLayers(layers.size());
+
+                PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
+
+                calcWorker.execute();
+            }
+        });
+
         menu.add(menuItem);
-        
-        
+
         menuItem = new JMenuItem("Remove Later Layers");
         menuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int layer = baseForm.layerSlider.getValue();
-				
-				if (layer == baseForm.photonFile.getLayerCount()-1) return;
-				
-				List<PhotonFileLayer> layers = baseForm.photonFile.getLayers();
-				
-				layers.subList(layer+1,baseForm.photonFile.getLayerCount()).clear();
-				
-				baseForm.photonFile.getPhotonFileHeader().setNumberLayers(layers.size());
-				
-				PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
-				
-				calcWorker.execute();
-			}
-		});
-        
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int layer = baseForm.layerSlider.getValue();
+
+                if (layer == baseForm.photonFile.getLayerCount() - 1)
+                    return;
+
+                List<PhotonFileLayer> layers = baseForm.photonFile.getLayers();
+
+                layers.subList(layer + 1, baseForm.photonFile.getLayerCount()).clear();
+
+                baseForm.photonFile.getPhotonFileHeader().setNumberLayers(layers.size());
+
+                PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
+
+                calcWorker.execute();
+            }
+        });
+
         menu.add(menuItem);
-        
+
         menuItem = new JMenuItem("Recalculate Z offsets");
         menuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				baseForm.photonFile.fixLayerHeights();
-				int layer = baseForm.layerSlider.getValue();				
-				PhotonFileLayer fileLayer = baseForm.photonFile.getLayer(layer);
-				baseForm.showLayerInformation(layer, fileLayer);
-			}
-		});
-        
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                baseForm.photonFile.fixLayerHeights();
+                int layer = baseForm.layerSlider.getValue();
+                PhotonFileLayer fileLayer = baseForm.photonFile.getLayer(layer);
+                baseForm.showLayerInformation(layer, fileLayer);
+            }
+        });
+
         menu.add(menuItem);
-        
+
+        menuItem = new JMenuItem("Update Preview");
+        menuItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    baseForm.photonFile.getPreviewOne().encodeImageData();
+                    baseForm.photonFile.getPreviewTwo().encodeImageData();
+                } catch (Exception e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+        });
+
+        menu.add(menuItem);
+
         setJMenuBar(menuBar);
     }
 
