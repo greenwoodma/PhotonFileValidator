@@ -22,6 +22,11 @@
         <artifactId>forms_rt</artifactId>
         <version>7.0.3</version>
     </dependency>
+    <dependency>
+        <groupId>com.github.greenwoodma</groupId>
+        <artifactId>photon-file-library</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
   <build>

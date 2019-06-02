@@ -10,5 +10,6 @@
 
   <modules>
     <module>PhotonFileValidator</module>
+    <module>photon-file-library</module>
   </modules>
 </project>
