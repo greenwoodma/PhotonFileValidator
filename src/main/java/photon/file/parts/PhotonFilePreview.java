@@ -24,8 +24,14 @@
 
 package photon.file.parts;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.Arrays;
+
+import javax.imageio.ImageIO;
 
 /**
  * by bn on 01/07/2018.
@@ -34,12 +40,10 @@ public class PhotonFilePreview {
     private int resolutionX;
     private int resolutionY;
     private int imageAddress;
-    private int dataSize;
 
     private byte[] rawImageData;
 
     private int[] imageData;
-
 
     public PhotonFilePreview(int previewAddress, byte[] file) throws Exception {
         byte[] data = Arrays.copyOfRange(file, previewAddress, previewAddress + 16);
@@ -48,7 +52,7 @@ public class PhotonFilePreview {
         resolutionX = ds.readInt();
         resolutionY = ds.readInt();
         imageAddress = ds.readInt();
-        dataSize = ds.readInt();
+        int dataSize = ds.readInt();
 
         rawImageData = Arrays.copyOfRange(file, imageAddress, imageAddress + dataSize);
 
@@ -59,12 +63,12 @@ public class PhotonFilePreview {
         os.writeInt(resolutionX);
         os.writeInt(resolutionY);
         os.writeInt(startAddress + 4+4+4+4);
-        os.writeInt(dataSize);
-        os.write(rawImageData, 0, dataSize);
+        os.writeInt(rawImageData.length);
+        os.write(rawImageData, 0, rawImageData.length);
     }
 
     public int getByteSize() {
-        return 4+4+4+4 + dataSize;
+        return 4+4+4+4 + rawImageData.length;
     }
 
     private void decodeImageData() {
@@ -77,10 +81,10 @@ public class PhotonFilePreview {
          *   If the X bit is set, then the next 2 bytes (little endian) masked
          *   with 0xFFF represents how many more times to repeat that pixel.
     	 */
-    	
+
         imageData = new int[resolutionX * resolutionY];
         int d = 0;
-        for (int i = 0; i < dataSize; i++) {
+        for (int i = 0; i < rawImageData.length; i++) {
             int dot = rawImageData[i] & 0xFF | ((rawImageData[++i] & 0xFF) << 8);
 
             int color =   ((dot & 0xF800) << 8) | ((dot & 0x07C0) << 5) | ((dot & 0x001F) << 3);
@@ -99,6 +103,83 @@ public class PhotonFilePreview {
                 imageData[d++] = color;
                 repeat--;
             }
+        }
+    }
+
+    public void encodeImageData() throws Exception {
+
+        BufferedImage image = ImageIO.read(new File("preview.jpg"));
+
+        resolutionX = image.getWidth();
+        resolutionY = image.getHeight();
+
+        BufferedImage temp = new BufferedImage(resolutionX, resolutionY, BufferedImage.TYPE_USHORT_555_RGB);
+
+        Graphics2D graphics = temp.createGraphics();
+
+        graphics.drawImage(image, 0, 0, null);
+
+        graphics.dispose();
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        int length = 0;
+        short current = 0;
+        byte first = 0, second = 0;
+
+        for (int y = 0; y < resolutionY; ++y) {
+
+            for (int x = 0; x < resolutionX; ++x) {
+                short next = ((short[]) temp.getRaster().getDataElements(x, y, null))[0];
+
+                if (next != current) {
+                    if (length > 0) {
+                        writeRLE(baos, first, second, length);
+                    }
+
+                    current = next;
+                    length = 1;
+                    byte r = (byte) (temp.getRaster().getSample(x, y, 0));
+                    byte g = (byte) (temp.getRaster().getSample(x, y, 1));
+                    byte b = (byte) (temp.getRaster().getSample(x, y, 2));
+
+                    first = (byte) (((g & 0x3) << 6) | b);
+                    second = (byte) ((r << 3) | (g >> 2));
+
+                } else {
+                    length++;
+                }
+            }
+        }
+
+        writeRLE(baos, first, second, length);
+
+        rawImageData = baos.toByteArray();
+    }
+
+    private static void writeRLE(ByteArrayOutputStream baos, byte first, byte second, int length) {
+        if (length > 0xFFF) {
+            // when reading the data in the length is masked with 0xFFF limiting
+            // us to a single run of 4095 pixels. if we have more pixels than
+            // that then we need to store multiple runs of the same colour
+            writeRLE(baos, first, second, 0xFFF);
+            writeRLE(baos, first, second, length - 0xFFF);
+        } else if (length > 1) {
+            // we won't go past 0xFFF but we do have a run of more than one
+            // pixel of the same colour so we write out the colour and the
+            // number of extra pixels we need over and above the one implicit in
+            // the fact we are storing a colour
+            baos.write((byte) (first | 0x20));
+            baos.write(second);
+            length = length - 1;//
+            baos.write((byte) length);
+            baos.write((byte) ((length >> 8) | 0x30));
+        } else {
+            // in the final case we have a single pixel of colour which is
+            // followed by a pixel of a different colour so we just write out
+            // the colour info with no length of run info
+            baos.write(first);
+            baos.write(second);
         }
     }
 
