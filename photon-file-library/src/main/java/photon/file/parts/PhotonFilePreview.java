@@ -45,14 +45,23 @@ public class PhotonFilePreview {
 
     private int[] imageData;
 
+    private int p1;
+    private int p2;
+    private int p3;
+    private int p4;
+
     public PhotonFilePreview(int previewAddress, byte[] file) throws Exception {
-        byte[] data = Arrays.copyOfRange(file, previewAddress, previewAddress + 16);
+        byte[] data = Arrays.copyOfRange(file, previewAddress, previewAddress + 32);
         PhotonInputStream ds = new PhotonInputStream(new ByteArrayInputStream(data));
 
         resolutionX = ds.readInt();
         resolutionY = ds.readInt();
         imageAddress = ds.readInt();
         int dataSize = ds.readInt();
+        p1 = ds.readInt();
+        p2 = ds.readInt();
+        p3 = ds.readInt();
+        p4 = ds.readInt();
 
         rawImageData = Arrays.copyOfRange(file, imageAddress, imageAddress + dataSize);
 
@@ -62,13 +71,17 @@ public class PhotonFilePreview {
     public void save(PhotonOutputStream os, int startAddress) throws Exception {
         os.writeInt(resolutionX);
         os.writeInt(resolutionY);
-        os.writeInt(startAddress + 4+4+4+4);
+        os.writeInt(startAddress + 4+4+4+4 + 4+4+4+4);
         os.writeInt(rawImageData.length);
+        os.writeInt(p1);
+        os.writeInt(p2);
+        os.writeInt(p3);
+        os.writeInt(p4);
         os.write(rawImageData, 0, rawImageData.length);
     }
 
     public int getByteSize() {
-        return 4+4+4+4 + rawImageData.length;
+        return 4+4+4+4 + 4+4+4+4 + rawImageData.length;
     }
 
     private void decodeImageData() {

@@ -29,12 +29,13 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Hashtable;
 import java.util.List;
 
 /**
  * by bn on 01/07/2018.
  */
-public class PhotonFileLayer implements Cloneable {
+public class PhotonFileLayer {
     private float layerPositionZ;
     private float layerExposure;
     private float layerOffTimeSeconds;
@@ -52,6 +53,8 @@ public class PhotonFileLayer implements Cloneable {
     private ArrayList<BitSet> islandRows;
     private int isLandsCount;
     private long pixels;
+
+    private ArrayList<PhotonFileLayer> antiAliasLayers = new ArrayList<>();
 
     private boolean extendsMargin;
     private PhotonFileHeader photonFileHeader;
@@ -73,12 +76,29 @@ public class PhotonFileLayer implements Cloneable {
         unknown4 = ds.readInt();
     }
 
-    public int save(PhotonOutputStream os, int dataPosition) throws Exception {
+    public PhotonFileLayer(PhotonFileLayer photonFileLayer, PhotonFileHeader photonFileHeader) {
+        layerPositionZ = photonFileLayer.layerPositionZ;
+        layerExposure = photonFileLayer.layerExposure;
+        layerOffTimeSeconds = photonFileLayer.layerOffTimeSeconds;
+        dataAddress = photonFileLayer.dataAddress;
+        dataAddress = photonFileLayer.dataSize;
+
+        this.photonFileHeader = photonFileHeader;
+
+        // Dont copy data, we are building new AA layers anyway
+        //this.imageData = copy();
+        //this.packedLayerImage = copy();
+    }
+
+    public int savePos(int dataPosition) throws Exception {
+        dataAddress = dataPosition;
+        return dataPosition + dataSize;
+    }
+
+    public void save(PhotonOutputStream os) throws Exception {
         os.writeFloat(layerPositionZ);
         os.writeFloat(layerExposure);
         os.writeFloat(layerOffTimeSeconds);
-
-        dataAddress = dataPosition;
 
         os.writeInt(dataAddress);
         os.writeInt(dataSize);
@@ -87,8 +107,6 @@ public class PhotonFileLayer implements Cloneable {
         os.writeInt(unknown2);
         os.writeInt(unknown3);
         os.writeInt(unknown4);
-
-        return dataPosition + dataSize + 1;
     }
     
     public PhotonFileLayer(PhotonFileLayer orig) throws Exception {
@@ -111,7 +129,10 @@ public class PhotonFileLayer implements Cloneable {
 
     public void saveData(PhotonOutputStream os) throws Exception {
         os.write(imageData, 0, dataSize);
-        os.writeByte(0);
+        
+        
+        //This seems to have got dropped when AA was added
+        //os.writeByte(0);
     }
 
     public static int getByteSize() {
@@ -160,6 +181,20 @@ public class PhotonFileLayer implements Cloneable {
         return unpackedImage;
     }
 
+    private void aaPixels(ArrayList<BitSet> unpackedImage, PhotonLayer photonLayer) {
+        photonLayer.clear();
+
+        for (int y = 0; y < unpackedImage.size(); y++) {
+            BitSet currentRow = unpackedImage.get(y);
+            if (currentRow != null) {
+                for (int x = 0; x < currentRow.length(); x++) {
+                    if (currentRow.get(x)) {
+                        photonLayer.unSupported(x, y);
+                    }
+                }
+            }
+        }
+    }
 
     private void unknownPixels(ArrayList<BitSet> unpackedImage, PhotonLayer photonLayer) {
         photonLayer.clear();
@@ -214,16 +249,39 @@ public class PhotonFileLayer implements Cloneable {
 
         List<PhotonFileLayer> layers = new ArrayList<>();
 
+        int antiAliasLevel = 1;
+        if (photonFileHeader.getVersion() > 1) {
+            antiAliasLevel = photonFileHeader.getAntiAliasingLevel();
+        }
+
+        int layerCount = photonFileHeader.getNumberOfLayers();
 
         try (PhotonInputStream ds = new PhotonInputStream(new ByteArrayInputStream(file, photonFileHeader.getLayersDefinitionOffsetAddress(), file.length))) {
-            for (int i = 0; i < photonFileHeader.getNumberOfLayers(); i++) {
+            Hashtable<Integer, PhotonFileLayer> layerMap = new Hashtable<>();
+            for (int i = 0; i < layerCount; i++) {
 
-                iPhotonProgress.showInfo("Reading photon file layer " + i + "/" + photonFileHeader.getNumberOfLayers());
+                iPhotonProgress.showInfo("Reading photon file layer " + (i + 1) + "/" + photonFileHeader.getNumberOfLayers());
 
                 PhotonFileLayer layer = new PhotonFileLayer(ds);
                 layer.photonFileHeader = photonFileHeader;
                 layer.imageData = Arrays.copyOfRange(file, layer.dataAddress, layer.dataAddress + layer.dataSize);
                 layers.add(layer);
+                layerMap.put(i, layer);
+            }
+
+            if (antiAliasLevel > 1) {
+                for (int a = 0; a < (antiAliasLevel - 1); a++) {
+                    for (int i = 0; i < layerCount; i++) {
+                        iPhotonProgress.showInfo("Reading photon file AA " + (2 + a) + "/" + antiAliasLevel + " layer " + (i + 1) + "/" + photonFileHeader.getNumberOfLayers());
+
+                        PhotonFileLayer layer = new PhotonFileLayer(ds);
+                        layer.photonFileHeader = photonFileHeader;
+                        layer.imageData = Arrays.copyOfRange(file, layer.dataAddress, layer.dataAddress + layer.dataSize);
+
+                        layerMap.get(i).addAntiAliasLayer(layer);
+
+                    }
+                }
             }
         }
 
@@ -233,7 +291,64 @@ public class PhotonFileLayer implements Cloneable {
         return layers;
     }
 
+    private void addAntiAliasLayer(PhotonFileLayer layer) {
+        antiAliasLayers.add(layer);
+    }
 
+    public static void calculateAALayers(PhotonFileHeader photonFileHeader, List<PhotonFileLayer> layers, PhotonAaMatrix photonAaMatrix, IPhotonProgress iPhotonProgress) throws Exception {
+        PhotonLayer photonLayer = new PhotonLayer(photonFileHeader.getResolutionX(), photonFileHeader.getResolutionY());
+        int[][] source = new int[photonFileHeader.getResolutionY()][photonFileHeader.getResolutionX()];
+
+        int i = 0;
+        for (PhotonFileLayer layer : layers) {
+            ArrayList<BitSet> unpackedImage = layer.unpackImage(photonFileHeader.getResolutionX());
+
+            iPhotonProgress.showInfo("Calculating AA for photon file layer " + i + "/" + photonFileHeader.getNumberOfLayers());
+
+
+            for (int y = 0; y < photonFileHeader.getResolutionY(); y++) {
+                for (int x = 0; x < photonFileHeader.getResolutionX(); x++) {
+                    source[y][x] = 0;
+                }
+            }
+
+            for (int y = 0; y < unpackedImage.size(); y++) {
+                BitSet currentRow = unpackedImage.get(y);
+                if (currentRow != null) {
+                    for (int x = 0; x < currentRow.length(); x++) {
+                        if (currentRow.get(x)) {
+                            source[y][x] = 255;
+                        }
+                    }
+                }
+            }
+
+            // Calc
+            int[][] target = photonAaMatrix.calc(source);
+
+            int aaTresholdDiff = 255 / photonFileHeader.getAntiAliasingLevel();
+            int aaTreshold = 0;
+            for (PhotonFileLayer aaFileLayer : layer.antiAliasLayers) {
+                photonLayer.clear();
+                aaTreshold += aaTresholdDiff;
+
+                for (int y = 0; y < photonFileHeader.getResolutionY(); y++) {
+                    for (int x = 0; x < photonFileHeader.getResolutionX(); x++) {
+                        if (target[y][x] >= aaTreshold) {
+                            photonLayer.supported(x, y);
+                        }
+                    }
+                }
+
+                aaFileLayer.saveLayer(photonLayer);
+            }
+
+            i++;
+        }
+        photonLayer.unLink();
+        System.gc();
+
+    }
 
     public static void calculateLayers(PhotonFileHeader photonFileHeader, List<PhotonFileLayer> layers, int margin, IPhotonProgress iPhotonProgress) throws Exception {
         PhotonLayer photonLayer = new PhotonLayer(photonFileHeader.getResolutionX(), photonFileHeader.getResolutionY());
@@ -266,6 +381,16 @@ public class PhotonFileLayer implements Cloneable {
 
             layer.packedLayerImage = photonLayer.packLayerImage();
             layer.isCalculated = true;
+
+            if (photonFileHeader.getVersion() > 1) {
+                for (PhotonFileLayer aaFileLayer : layer.antiAliasLayers) {
+                    ArrayList<BitSet> aaUnpackedImage = aaFileLayer.unpackImage(photonFileHeader.getResolutionX());
+                    PhotonLayer aaPhotonLayer = new PhotonLayer(photonFileHeader.getResolutionX(), photonFileHeader.getResolutionY());
+                    aaFileLayer.unknownPixels(aaUnpackedImage, aaPhotonLayer);
+                    aaFileLayer.packedLayerImage = aaPhotonLayer.packLayerImage();
+                    aaFileLayer.isCalculated = false;
+                }
+            }
 
             i++;
         }
@@ -424,5 +549,16 @@ public class PhotonFileLayer implements Cloneable {
 
     public ArrayList<BitSet> getUnknownRows() {
         return unpackImage(photonFileHeader.getResolutionX());
+    }
+
+    public PhotonFileLayer getAntiAlias(int a) {
+        if (antiAliasLayers.size() > a) {
+            return antiAliasLayers.get(a);
+        }
+        return null;
+    }
+
+    public ArrayList<PhotonFileLayer> getAntiAlias() {
+        return antiAliasLayers;
     }
 }
