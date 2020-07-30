@@ -80,6 +80,25 @@ public class BaseFrame extends JFrame implements AWTEventListener {
 
         menu.add(menuItem);
 
+        menuItem = new JMenuItem("Export All Layers");
+        menuItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    List<PhotonFileLayer> layers = baseForm.photonFile.getLayers();
+                    for (int i = 0 ; i < layers.size() ; ++i) {
+                        layers.get(i).getLayer().exportAsPNG(new File("slice-" + i + ".png"));
+                    }
+                } catch (Exception e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+        });
+
+        menu.add(menuItem);
+
         menuItem = new JMenuItem("Import Layer");
         menuItem.addActionListener(new ActionListener() {
 
@@ -146,6 +165,19 @@ public class BaseFrame extends JFrame implements AWTEventListener {
                             for (File file : files) {
 
                                 PhotonFileLayer fileLayer = baseForm.photonFile.getLayer(layer);
+
+                                if (fileLayer == null) {
+                                    fileLayer = new PhotonFileLayer(baseForm.photonFile.getLayers().get(baseForm.photonFile.getLayerCount()-1));
+
+                                    fileLayer.saveLayer(
+                                            new PhotonLayer(baseForm.photonFile.getWidth(), baseForm.photonFile.getHeight()));
+
+                                    List<PhotonFileLayer> layers = baseForm.photonFile.getLayers();
+                                    layers.add(layer, fileLayer);
+                                    baseForm.photonFile.getPhotonFileHeader().setNumberLayers(layers.size());
+
+                                }
+
                                 PhotonLayer layerData = fileLayer.getLayer();// new
                                                                              // PhotonLayer(baseForm.photonFile.getWidth(),
                                                                              // baseForm.photonFile.getHeight());
@@ -230,6 +262,31 @@ public class BaseFrame extends JFrame implements AWTEventListener {
                 }
             }
         });
+
+        menu.add(menuItem);
+
+        menuItem = new JMenuItem("Set Following Layers to 0.02mm");
+        menuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				List<PhotonFileLayer> layers = baseForm.photonFile.getLayers();
+
+				int layer = baseForm.layerSlider.getValue();
+
+				float height = layers.get(layer).getLayerPositionZ();
+
+				for (int i = layer+1 ; i < layers.size() ; ++i) {
+					height += 0.02;
+
+					layers.get(i).setLayerPositionZ(height);
+				}
+
+				PhotonCalcWorker calcWorker = new PhotonCalcWorker(baseForm);
+
+                calcWorker.execute();
+			}
+		});
 
         menu.add(menuItem);
 
