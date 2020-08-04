@@ -14,5 +14,6 @@
     <module>PhotonFileValidator</module>
     <module>photon-file-library</module>
     <module>photon-file-editor</module>
+    <module>photon-file-welder</module>
   </modules>
 </project>
