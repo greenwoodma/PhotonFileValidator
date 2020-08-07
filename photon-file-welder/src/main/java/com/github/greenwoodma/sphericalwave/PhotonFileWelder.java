@@ -21,8 +21,8 @@ public class PhotonFileWelder implements Callable<Integer> {
 	@Option(names = "-o", required = true)
 	File output;
 
-	@Option(names = "-h", required = true)
-	Float height;
+	@Option(names = "-h", required = true, arity = "1..*")
+	List<Float> height;
 
 	public static void main(String args[]) {
 		int exitCode = new CommandLine(new PhotonFileWelder()).execute(args);
@@ -32,7 +32,7 @@ public class PhotonFileWelder implements Callable<Integer> {
 	@Override
 	public Integer call() throws Exception {
 
-		List<PhotonFile> photonFiles = new ArrayList<PhotonFile>();
+		List<PhotonFile> photonFiles = new ArrayList<PhotonFile>();		
 
 		for (File file : files) {
 			PhotonFile pf = new PhotonFile();
@@ -40,18 +40,38 @@ public class PhotonFileWelder implements Callable<Integer> {
 			pf.readFile(file);
 			photonFiles.add(pf);
 		}
+		
+		height.add(0, 0f);
+		
+		List<PhotonFileLayer> combined = new ArrayList<PhotonFileLayer>();
+		
+		for (int i = 0 ; i < height.size() ; ++i) {
+			PhotonFile current = photonFiles.get(i%2);
+			
+			float layerThickness = current.getPhotonFileHeader().getLayerHeight();
+			
+			float startHeight = height.get(i);
+			float endHeight = i != height.size() -1 ? height.get(i+1) : current.getLayer(current.getLayerCount()-1).getLayerPositionZ();
+			
+			
+			System.out.println("\n"+startHeight+" --> " + endHeight);
+			System.out.println(current.getPhotonFileHeader().getLayerHeight());
+			System.out.println(current.getLayerCount());
+			
+			int firstLayer = (int)(startHeight / layerThickness);
+			int lastLayer = (int)(endHeight / layerThickness)-1;
+			
+			System.out.println(firstLayer+": "+current.getLayer(firstLayer).getLayerPositionZ());
+			System.out.println(lastLayer+": "+current.getLayer(lastLayer).getLayerPositionZ());
+			
+			combined.addAll(current.getLayers().subList(firstLayer, lastLayer+1));
+			
+			System.out.println(combined.get(combined.size()-1).getLayerPositionZ());
+		}
 
-		int layer1 = (int)(height / photonFiles.get(0).getPhotonFileHeader().getLayerHeight());
-
-		int layer2 = (int)(height / photonFiles.get(1).getPhotonFileHeader().getLayerHeight());
-
-		List<PhotonFileLayer> layers1 = photonFiles.get(0).getLayers();
-		List<PhotonFileLayer> layers2 = photonFiles.get(1).getLayers();
-
-		layers1.subList(layer1, layers1.size()).clear();
-		layers1.addAll(layers2.subList(layer2, layers2.size()));
-
-		photonFiles.get(0).getPhotonFileHeader().setNumberLayers(layers1.size());
+		photonFiles.get(0).getLayers().clear();
+		photonFiles.get(0).getLayers().addAll(combined);
+		photonFiles.get(0).getPhotonFileHeader().setNumberLayers(combined.size());
 
 		photonFiles.get(0).saveFile(output);
 
