@@ -41,28 +41,30 @@ public class PhotonFileWelder implements Callable<Integer> {
 			photonFiles.add(pf);
 		}
 		
-		height.add(0, 0f);
+		height.add(0,0f);
 		
 		List<PhotonFileLayer> combined = new ArrayList<PhotonFileLayer>();
 		
 		for (int i = 0 ; i < height.size() ; ++i) {
 			PhotonFile current = photonFiles.get(i%2);
 			
-			float layerThickness = current.getPhotonFileHeader().getLayerHeight();
+			int layerThickness = (int)(100*current.getPhotonFileHeader().getLayerHeight());
 			
-			float startHeight = height.get(i);
-			float endHeight = i != height.size() -1 ? height.get(i+1) : current.getLayer(current.getLayerCount()-1).getLayerPositionZ();
+			int startHeight = (int)(100*height.get(i));
+			int endHeight = i != height.size() -1 ? (int)(100*height.get(i+1)) : (int)(100*current.getLayer(current.getLayerCount()-1).getLayerPositionZ());
 			
 			
 			System.out.println("\n"+startHeight+" --> " + endHeight);
-			System.out.println(current.getPhotonFileHeader().getLayerHeight());
+			System.out.println(layerThickness);
 			System.out.println(current.getLayerCount());
 			
-			int firstLayer = (int)(startHeight / layerThickness);
-			int lastLayer = (int)(endHeight / layerThickness)-1;
+			int firstLayer = (startHeight / layerThickness);
+			int lastLayer = ((endHeight / layerThickness))-1;
 			
 			System.out.println(firstLayer+": "+current.getLayer(firstLayer).getLayerPositionZ());
 			System.out.println(lastLayer+": "+current.getLayer(lastLayer).getLayerPositionZ());
+			
+			//TODO add some asserts here 
 			
 			combined.addAll(current.getLayers().subList(firstLayer, lastLayer+1));
 			
